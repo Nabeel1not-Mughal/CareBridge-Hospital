@@ -300,7 +300,15 @@
                 window.location.href = "login.html";
             }
         }
+          window.onload = function () {
+            const isLoggedIn = localStorage.getItem("isLoggedIn");
+            if (!isLoggedIn || isLoggedIn !== "true") {
+                // Not logged in → redirect to login page
+                window.location.href = "login.html";
+            }
+        }
     </script>
 </body>
+
 
 </html>
