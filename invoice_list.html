@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice List - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0e8a3a;
+            color: #fff;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        button {
+            padding: 6px 12px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0c742f;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 80px auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 700px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Invoice List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Patient Name</th>
+                    <th>Patient ID</th>
+                    <th>Date</th>
+                    <th>Total Bill (Rs)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceTable">
+                <tr>
+                    <td colspan="6" style="text-align:center;">No invoices available</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Invoice Details</h3>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load bills from localStorage
+        let patients = JSON.parse(localStorage.getItem("patients")) || [];
+        let invoices = JSON.parse(localStorage.getItem("invoices")) || []; // invoices saved from create_bill.html
+
+        const tbody = document.getElementById("invoiceTable");
+
+        // Render invoice table
+        function renderInvoices() {
+            tbody.innerHTML = "";
+            if (invoices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No invoices available</td></tr>';
+                return;
+            }
+            invoices.forEach((inv, i) => {
+                const patient = patients.find(p => p.id === inv.patientId);
+                tbody.innerHTML += `<tr>
+            <td>${i + 1}</td>
+            <td>${patient ? patient.name : '-'}</td>
+            <td>${inv.patientId}</td>
+            <td>${inv.date}</td>
+            <td>${inv.total}</td>
+            <td><button onclick="viewInvoice(${i})">View</button></td>
+        </tr>`;
+            });
+        }
+
+        // Modal functionality
+        const modal = document.getElementById("modal");
+        const modalBody = document.getElementById("modalBody");
+        const spanClose = document.querySelector(".close");
+
+        spanClose.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // View invoice details
+        function viewInvoice(index) {
+            const inv = invoices[index];
+            const patient = patients.find(p => p.id === inv.patientId);
+            let html = `<strong>Patient Name:</strong> ${patient ? patient.name : '-'}<br>
+                <strong>Patient ID:</strong> ${inv.patientId}<br>
+                <strong>Date:</strong> ${inv.date}<br><br>
+                <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background:#0e8a3a; color:#fff;">
+                        <th>Item</th>
+                        <th>Details</th>
+                        <th>Cost (Rs)</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            inv.items.forEach(it => {
+                html += `<tr>
+            <td>${it.item}</td>
+            <td>${it.details}</td>
+            <td>${it.cost}</td>
+        </tr>`;
+            });
+            html += `<tr>
+        <td colspan="2" style="text-align:right;font-weight:bold;">Total</td>
+        <td>${inv.total}</td>
+    </tr>`;
+            html += `</tbody></table>`;
+            modalBody.innerHTML = html;
+            modal.style.display = "block";
+        }
+
+        renderInvoices();
+    </script>
+
+</body>
+
+</html>

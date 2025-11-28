@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        form label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+
+        form input,
+        form select,
+        form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cfd8d2;
+            border-radius: 6px;
+            font-size: 15px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 12px 20px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Toaster */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 3s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>System Settings</h2>
+
+        <form id="settingsForm">
+            <label>Hospital Name</label>
+            <input type="text" id="hospitalName" placeholder="CareBridge Hospital" required>
+
+            <label>Hospital Address</label>
+            <textarea id="hospitalAddress" rows="3" placeholder="Enter full address"></textarea>
+
+            <label>Contact Number</label>
+            <input type="text" id="contactNumber" placeholder="0300-1234567">
+
+            <label>Email</label>
+            <input type="email" id="email" placeholder="info@carebridge.com">
+
+            <label>Operational Hours</label>
+            <input type="text" id="hours" placeholder="Mon-Sat 8AM - 8PM">
+
+            <label>Total Beds</label>
+            <input type="number" id="totalBeds" min="1" value="100">
+
+            <label>Enable Notifications</label>
+            <select id="notifications">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </select>
+
+            <button type="submit">Save Settings</button>
+        </form>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Load settings from localStorage or set defaults
+        let settings = JSON.parse(localStorage.getItem("systemSettings")) || {
+            hospitalName: "CareBridge Hospital",
+            hospitalAddress: "",
+            contactNumber: "",
+            email: "",
+            hours: "Mon-Sat 8AM - 8PM",
+            totalBeds: 100,
+            notifications: true
+        };
+
+        // Populate form
+        document.getElementById("hospitalName").value = settings.hospitalName;
+        document.getElementById("hospitalAddress").value = settings.hospitalAddress;
+        document.getElementById("contactNumber").value = settings.contactNumber;
+        document.getElementById("email").value = settings.email;
+        document.getElementById("hours").value = settings.hours;
+        document.getElementById("totalBeds").value = settings.totalBeds;
+        document.getElementById("notifications").value = settings.notifications;
+
+        // Toaster
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
+        // Save settings
+        document.getElementById("settingsForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            settings.hospitalName = document.getElementById("hospitalName").value;
+            settings.hospitalAddress = document.getElementById("hospitalAddress").value;
+            settings.contactNumber = document.getElementById("contactNumber").value;
+            settings.email = document.getElementById("email").value;
+            settings.hours = document.getElementById("hours").value;
+            settings.totalBeds = parseInt(document.getElementById("totalBeds").value);
+            settings.notifications = document.getElementById("notifications").value === "true";
+
+            localStorage.setItem("systemSettings", JSON.stringify(settings));
+            showToast("Settings saved successfully!");
+        });
+    </script>
+
+</body>
+
+</html>

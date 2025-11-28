@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Stock - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cfd8d2;
+            border-radius: 6px;
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 10px 18px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0e8a3a;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .actionBtn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .edit {
+            background: #3498db;
+        }
+
+        .delete {
+            background: #e74c3c;
+        }
+
+        .searchBox {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein .5s, fadeout .5s 3s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        .totalStock {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Pharmacy Medicine Stock</h2>
+
+        <div class="searchBox">
+            <input type="text" id="searchInput" placeholder="Search medicine by ID or Name">
+        </div>
+
+        <label>Medicine ID</label>
+        <input type="text" id="medId" placeholder="MED-000">
+
+        <label>Medicine Name</label>
+        <input type="text" id="medName" placeholder="Enter Name">
+
+        <label>Price (per unit)</label>
+        <input type="number" id="medPrice" placeholder="00.0">
+
+        <label>Stock Quantity</label>
+        <input type="number" id="medQty" placeholder="000">
+
+        <button onclick="addMedicine()">Add / Update Medicine</button>
+
+        <!-- STOCK TABLE -->
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">ID</th>
+                    <th onclick="sortTable(1)">Name</th>
+                    <th onclick="sortTable(2)">Price</th>
+                    <th onclick="sortTable(3)">Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="stockTable"></tbody>
+        </table>
+
+        <div class="totalStock">Total Stock Quantity: <span id="totalQty">0</span></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let stock = JSON.parse(localStorage.getItem("medicineStock")) || [];
+        let editIndex = null;
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        function renderStock(filter = "") {
+            const table = document.getElementById("stockTable");
+            table.innerHTML = "";
+            let totalQty = 0;
+
+            stock.filter(m => m.id.includes(filter) || m.name.toLowerCase().includes(filter.toLowerCase()))
+                .forEach((m, i) => {
+                    totalQty += m.qty;
+                    table.innerHTML += `
+        <tr>
+            <td>${m.id}</td>
+            <td>${m.name}</td>
+            <td>Rs ${m.price.toFixed(2)}</td>
+            <td>${m.qty}</td>
+            <td>
+                <button class="actionBtn edit" onclick="editMed(${i})">Edit</button>
+                <button class="actionBtn delete" onclick="deleteMed(${i})">Delete</button>
+            </td>
+        </tr>`;
+                });
+
+            document.getElementById("totalQty").innerText = totalQty;
+        }
+
+        renderStock();
+
+        function addMedicine() {
+            const id = document.getElementById("medId").value.trim();
+            const name = document.getElementById("medName").value.trim();
+            const price = parseFloat(document.getElementById("medPrice").value);
+            const qty = parseInt(document.getElementById("medQty").value);
+
+            if (!id || !name || isNaN(price) || isNaN(qty)) return showToast("Fill all fields!");
+
+            let med = { id, name, price, qty };
+
+            if (editIndex === null) {
+                stock.push(med);
+                showToast("Medicine Added!");
+            } else {
+                stock[editIndex] = med;
+                editIndex = null;
+                showToast("Medicine Updated!");
+            }
+
+            localStorage.setItem("medicineStock", JSON.stringify(stock));
+            resetForm();
+            renderStock();
+        }
+
+        function editMed(i) {
+            let m = stock[i];
+            document.getElementById("medId").value = m.id;
+            document.getElementById("medName").value = m.name;
+            document.getElementById("medPrice").value = m.price;
+            document.getElementById("medQty").value = m.qty;
+            editIndex = i;
+            showToast("Edit Mode Active");
+        }
+
+        function deleteMed(i) {
+            if (confirm("Delete this medicine?")) {
+                stock.splice(i, 1);
+                localStorage.setItem("medicineStock", JSON.stringify(stock));
+                renderStock();
+                showToast("Deleted!");
+            }
+        }
+
+        function resetForm() {
+            document.getElementById("medId").value = "";
+            document.getElementById("medName").value = "";
+            document.getElementById("medPrice").value = "";
+            document.getElementById("medQty").value = "";
+        }
+
+        document.getElementById("searchInput").addEventListener("input", (e) => {
+            renderStock(e.target.value);
+        });
+
+        // Sort table columns
+        function sortTable(col) {
+            stock.sort((a, b) => {
+                let v1 = Object.values(a)[col];
+                let v2 = Object.values(b)[col];
+                if (typeof v1 === "string") v1 = v1.toLowerCase();
+                if (typeof v2 === "string") v2 = v2.toLowerCase();
+                return v1 > v2 ? 1 : -1;
+            });
+            renderStock(document.getElementById("searchInput").value);
+        }
+    </script>
+
+</body>
+
+</html>

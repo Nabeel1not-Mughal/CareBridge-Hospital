@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Bill - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: calc(100% - 120px);
+            padding: 12px;
+            border: 1px solid #cfd8d2;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0e8a3a;
+            color: #fff;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .total-box {
+            margin-top: 20px;
+            background: #f7fdf9;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein .5s, fadeout .5s 3s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Create Bill</h2>
+
+        <label>Enter Patient ID</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <input type="text" id="patientIdInput" placeholder="PT-001">
+            <button type="button" id="searchBtn">Generate Bill</button>
+        </div>
+
+        <div id="patientInfo" style="background:#f7fdf9; padding:10px; border-radius:6px; margin-top:10px;">
+            <strong>Name:</strong> <span id="pName">-</span><br>
+            <strong>Gender:</strong> <span id="pGender">-</span><br>
+            <strong>DOB:</strong> <span id="pDOB">-</span>
+        </div>
+
+        <table id="billTable">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Details</th>
+                    <th>Cost (Rs)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="3" style="text-align:center;">Enter patient ID to generate bill</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-box">
+            Total Bill: Rs <span id="totalBill">0</span>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Load data
+        let patients = JSON.parse(localStorage.getItem("patients")) || [];
+        let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+        let medicalHistories = JSON.parse(localStorage.getItem("medicalHistories")) || [];
+        let labTests = JSON.parse(localStorage.getItem("labTests")) || [];
+        let roomCharges = JSON.parse(localStorage.getItem("roomCharges")) || []; // You can define per room
+
+        // Toast
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        // Generate Bill
+        function generateBill(patientId) {
+            const patient = patients.find(p => p.id === patientId);
+            if (!patient) {
+                showToast("Patient not found!");
+                return;
+            }
+
+            document.getElementById("pName").innerText = patient.name;
+            document.getElementById("pGender").innerText = patient.gender;
+            document.getElementById("pDOB").innerText = patient.dob;
+
+            const tbody = document.querySelector("#billTable tbody");
+            tbody.innerHTML = "";
+            let total = 0;
+
+            // Appointment Fee
+            const appt = appointments.find(a => a.patientId === patientId);
+            if (appt) {
+                tbody.innerHTML += `<tr><td>Appointment Fee</td><td>Doctor: ${appt.doctor}</td><td>${appt.fee || 0}</td></tr>`;
+                total += appt.fee || 0;
+            }
+
+            // Doctor Fee (if separate)
+            if (appt && appt.doctorFee) {
+                tbody.innerHTML += `<tr><td>Doctor Fee</td><td>Consultation</td><td>${appt.doctorFee}</td></tr>`;
+                total += appt.doctorFee;
+            }
+
+            // Medicines
+            const meds = medicalHistories.filter(m => m.patientId === patientId);
+            meds.forEach(m => {
+                m.medicines.forEach(med => {
+                    tbody.innerHTML += `<tr><td>Medicine</td><td>${med.name} x ${med.qty}</td><td>${med.total}</td></tr>`;
+                    total += med.total;
+                });
+            });
+
+            // Lab Tests
+            const tests = labTests.filter(t => t.patientId === patientId);
+            tests.forEach(t => {
+                t.tests.forEach(test => {
+                    tbody.innerHTML += `<tr><td>Lab Test</td><td>${test.name}</td><td>${test.cost}</td></tr>`;
+                    total += test.cost;
+                });
+            });
+
+            // Room & Bed Charges
+            if (patient.room) {
+                const roomRate = roomCharges.find(r => r.room === patient.room)?.rate || 0;
+                tbody.innerHTML += `<tr><td>Room Charge</td><td>Room ${patient.room}, Bed ${patient.bed}</td><td>${roomRate}</td></tr>`;
+                total += roomRate;
+            }
+
+            document.getElementById("totalBill").innerText = total;
+        }
+
+        // Event
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            const id = document.getElementById("patientIdInput").value.trim();
+            if (!id) return showToast("Enter patient ID");
+            generateBill(id);
+        });
+
+        document.getElementById("patientIdInput").addEventListener("keypress", function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById("searchBtn").click();
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+
+</html>

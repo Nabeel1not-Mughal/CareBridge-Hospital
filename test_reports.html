@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Test Reports - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        input {
+            width: calc(100% - 120px);
+            padding: 12px;
+            border: 1px solid #cfd8d2;
+            border-radius: 6px;
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0e8a3a;
+            color: #fff;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein .5s, fadeout .5s 3s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        .details-box {
+            background: #f7fdf9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Lab Test Reports</h2>
+
+        <label>Enter Patient ID</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <input type="text" id="patientIdInput" placeholder="PT-001">
+            <button type="button" id="searchBtn">Search</button>
+        </div>
+
+        <div id="patientInfo" class="details-box">
+            <strong>Name:</strong> <span id="pName">-</span><br>
+            <strong>Gender:</strong> <span id="pGender">-</span><br>
+            <strong>DOB:</strong> <span id="pDOB">-</span>
+        </div>
+
+        <table id="reportTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Test Name</th>
+                    <th>Result / Notes</th>
+                    <th>Cost (Rs)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" style="text-align:center;">Search patient to view reports</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let patients = JSON.parse(localStorage.getItem("patients")) || [];
+        let labTests = JSON.parse(localStorage.getItem("labTests")) || [];
+
+        const input = document.getElementById("patientIdInput");
+        const searchBtn = document.getElementById("searchBtn");
+        const pName = document.getElementById("pName");
+        const pGender = document.getElementById("pGender");
+        const pDOB = document.getElementById("pDOB");
+        const tbody = document.querySelector("#reportTable tbody");
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        function renderReports(patientId) {
+            tbody.innerHTML = "";
+            const reports = labTests.filter(r => r.patientId === patientId);
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No lab reports found</td></tr>';
+                return;
+            }
+            reports.forEach(r => {
+                r.tests.forEach((t, i) => {
+                    tbody.innerHTML += `
+            <tr>
+                <td>${r.date}</td>
+                <td>${t.name}</td>
+                <td>${t.result}</td>
+                <td>${t.cost}</td>
+                <td>
+                    <button onclick="deleteTest('${r.patientId}','${r.date}',${i})" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:4px 8px;">Delete</button>
+                </td>
+            </tr>
+            `;
+                });
+            });
+        }
+
+        // Delete specific test
+        function deleteTest(patientId, date, testIndex) {
+            if (confirm("Delete this test?")) {
+                let reports = labTests.filter(r => r.patientId === patientId && r.date === date);
+                if (reports.length > 0) {
+                    reports[0].tests.splice(testIndex, 1);
+                    // Remove empty report
+                    if (reports[0].tests.length === 0) {
+                        labTests = labTests.filter(r => !(r.patientId === patientId && r.date === date));
+                    }
+                    localStorage.setItem("labTests", JSON.stringify(labTests));
+                    renderReports(patientId);
+                    showToast("Test deleted!");
+                }
+            }
+        }
+
+        searchBtn.addEventListener("click", () => {
+            const id = input.value.trim();
+            const patient = patients.find(p => p.id === id);
+            if (!patient) {
+                showToast("Patient not found!");
+                pName.innerText = "-";
+                pGender.innerText = "-";
+                pDOB.innerText = "-";
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Patient not found</td></tr>';
+                return;
+            }
+            pName.innerText = patient.name;
+            pGender.innerText = patient.gender;
+            pDOB.innerText = patient.dob;
+            renderReports(id);
+        });
+
+        input.addEventListener("keypress", function (e) {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+
+</html>

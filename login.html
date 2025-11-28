@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareBridge HMS - Login</title>
+    <link rel="icon" href="images/careBridge.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Reset & Fonts */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body,
+        html {
+            height: 100%;
+            background: linear-gradient(135deg, #a1f0c1, #0e8a3a);
+        }
+
+        /* Center container */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Card */
+        .login-card {
+            background: #fff;
+            border-radius: 12px;
+            width: 350px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: fadeIn 1s ease;
+        }
+
+        /* Logo & Heading */
+        .login-card img {
+            width: 80px;
+            margin-bottom: 20px;
+        }
+
+        .login-card h2 {
+            color: #0e8a3a;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            border-radius: 8px;
+            border: 1px solid #ccd7cf;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #0e8a3a;
+            outline: none;
+        }
+
+        .input-group i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #0e8a3a;
+        }
+
+        /* Button */
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #0e8a3a;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #0c742f;
+        }
+
+        /* Footer */
+        .login-card p {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #777;
+        }
+
+        /* Loader overlay */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            display: none;
+        }
+
+        /* Hospital-themed Loader */
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 8px solid #eee;
+            border-top: 8px solid #0e8a3a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        .loader-text {
+            font-weight: 600;
+            color: #0e8a3a;
+            font-size: 16px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media(max-width:400px) {
+            .login-card {
+                width: 90%;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <img src="images/careBridge.png" alt="Hospital Logo">
+            <h2>CareBridge HMS</h2>
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username">
+                <i class="fi fi-rr-user"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password">
+                <i class="fi fi-rr-lock"></i>
+            </div>
+            <button onclick="login()">Login</button>
+            <p>&copy; 2025 CareBridge Hospital</p>
+        </div>
+    </div>
+
+    <!-- Loader Overlay -->
+    <div class="loader-overlay" id="loaderOverlay">
+        <div class="loader"></div>
+        <div class="loader-text">Logging you in...</div>
+    </div>
+
+    <script>
+        function login() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            if (!username || !password) {
+                alert("Please enter username & password");
+                return;
+            }
+
+            // Show loader
+            const loader = document.getElementById("loaderOverlay");
+            loader.style.display = "flex";
+
+            // Simulate login delay
+            setTimeout(() => {
+                loader.style.display = "none";
+                // Redirect to dashboard
+                window.location.href = "index.html";
+            }, 3000);
+        }
+    </script>
+
+    <!-- Icons -->
+    <link rel="stylesheet"
+        href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</body>
+
+</html>

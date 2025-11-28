@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Beds - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f2f8f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            text-align: center;
+            padding: 20px;
+            background: #e8f6ee;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: red;
+            font-size: 18px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Popup */
+        .popup {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 300px;
+        }
+
+        .popup button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            visibility: hidden;
+            min-width: 200px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 12px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            z-index: 999;
+            transform: translateX(-50%);
+            font-size: 16px;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Available Beds</h2>
+        <div class="info-box">
+            Available Beds: <span id="bedCount">0</span>
+        </div>
+        <div id="warningMsg" class="warning">⚠ Only few beds left!</div>
+    </div>
+
+    <!-- WARNING POPUP -->
+    <div id="warningPopup" class="popup">
+        <h3>⚠ Low Bed Availability</h3>
+        <p>Only <span id="popupBeds"></span> beds remaining!</p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const TOTAL_BEDS = 100; // total beds in hospital
+        const LOW_BED_LIMIT = 10; // warning threshold
+
+        const bedCountElement = document.getElementById("bedCount");
+        const warningMsg = document.getElementById("warningMsg");
+        const popup = document.getElementById("warningPopup");
+        const popupBeds = document.getElementById("popupBeds");
+
+        function showToast(msg) {
+            const x = document.getElementById("toast");
+            x.innerText = msg;
+            x.className = "toast show";
+            setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        function closePopup() {
+            popup.style.display = "none";
+        }
+
+        function updateBeds() {
+            // Get all patients and count assigned beds
+            const patients = JSON.parse(localStorage.getItem("patients")) || [];
+            const usedBeds = patients.filter(p => p.bed && p.room).length;
+            const availableBeds = TOTAL_BEDS - usedBeds;
+
+            bedCountElement.textContent = availableBeds;
+
+            if (availableBeds <= LOW_BED_LIMIT) {
+                warningMsg.style.display = "block";
+                popupBeds.textContent = availableBeds;
+                popup.style.display = "block";
+                showToast(`⚠ Only ${availableBeds} beds left!`);
+            } else {
+                warningMsg.style.display = "none";
+                popup.style.display = "none";
+            }
+        }
+
+        // Auto-update on page load
+        updateBeds();
+
+        // Listen for updates from other pages
+        window.addEventListener("storage", () => updateBeds());
+    </script>
+</body>
+
+</html>

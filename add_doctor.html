@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add New Doctor - CareBridge HMS</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: #eef3f0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 35px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0b6e33;
+            margin-bottom: 20px;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        h3 {
+            margin-top: 25px;
+            color: #0b6e33;
+            border-left: 5px solid #0b6e33;
+            padding-left: 10px;
+            font-size: 20px;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .col {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #c7d3cc;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #f9fdfb;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background: #0c7b38;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 17px;
+            margin-top: 25px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #0a652d;
+        }
+
+        /* Toaster */
+        .toast {
+            visibility: hidden;
+            min-width: 220px;
+            background: #0c7b38;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 14px;
+            position: fixed;
+            z-index: 2000;
+            left: 50%;
+            bottom: 35px;
+            font-size: 16px;
+            transform: translateX(-50%);
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.8s;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+                bottom: 0;
+            }
+
+            to {
+                opacity: 1;
+                bottom: 35px;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                opacity: 1;
+                bottom: 35px;
+            }
+
+            to {
+                opacity: 0;
+                bottom: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Add New Doctor</h2>
+
+        <form id="doctorForm">
+
+            <h3>Basic Information</h3>
+
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" placeholder="Dr. John Doe" required />
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="gender">
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="dob" required />
+                    </div>
+                </div>
+            </div>
+
+            <h3>Professional Details</h3>
+
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Specialization</label>
+                        <select id="specialization" required>
+                            <option value="" disabled selected>Select specialization</option>
+                            <option>Cardiologist</option>
+                            <option>Dermatologist</option>
+                            <option>Neurologist</option>
+                            <option>General Physician</option>
+                            <option>Orthopedic Surgeon</option>
+                            <option>Pediatrician</option>
+                            <option>Gynecologist</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="form-group">
+                        <label>Experience (Years)</label>
+                        <input type="number" id="experience" placeholder="5" min="0" />
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="form-group">
+                        <label>Qualification</label>
+                        <input type="text" id="qualification" placeholder="MBBS, FCPS" />
+                    </div>
+                </div>
+            </div>
+
+            <h3>Contact Details</h3>
+
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="phone" maxlength="12" placeholder="0300-1234567" required />
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="doctor@mail.com" />
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="form-group">
+                        <label>Clinic Room No.</label>
+                        <input type="text" id="room" placeholder="Room 12A" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Address</label>
+                <textarea id="address" rows="3" placeholder="Complete address"></textarea>
+            </div>
+
+            <button type="submit">Save Doctor</button>
+
+        </form>
+    </div>
+
+    <div id="toast" class="toast">Doctor added successfully!</div>
+
+    <script>
+        let doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+
+        // Phone formatting
+        document.getElementById("phone").addEventListener("input", function () {
+            let v = this.value.replace(/\D/g, '').substring(0, 11);
+            if (v.length > 4) v = v.substring(0, 4) + "-" + v.substring(4);
+            this.value = v;
+        });
+
+        // Toaster
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        // Save Doctor
+        document.getElementById("doctorForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let doc = {
+                id: "DR-" + (doctors.length + 1).toString().padStart(3, "0"),
+                name: name.value,
+                gender: gender.value,
+                dob: dob.value,
+                specialization: specialization.value,
+                experience: experience.value,
+                qualification: qualification.value,
+                phone: phone.value,
+                email: email.value,
+                room: room.value,
+                address: address.value
+            };
+
+            doctors.push(doc);
+            localStorage.setItem("doctors", JSON.stringify(doctors));
+
+            showToast("Doctor added successfully!");
+
+            this.reset();
+        });
+    </script>
+
+</body>
+
+</html>

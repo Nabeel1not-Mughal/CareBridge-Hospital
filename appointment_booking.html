@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f2f8f4;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #0e8a3a;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd7cf;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 6px;
+            font-size: 17px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #0c742f;
+        }
+
+        /* Toaster */
+        .toast {
+            visibility: hidden;
+            min-width: 200px;
+            margin-left: -100px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 12px;
+            position: fixed;
+            z-index: 2000;
+            left: 50%;
+            bottom: 30px;
+            font-size: 16px;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Book Appointment</h2>
+
+        <form id="appointmentForm">
+            <div class="form-group">
+                <label>Patient</label>
+                <select id="patientSelect" required>
+                    <option value="">-- Select Patient --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Doctor</label>
+                <select id="doctorSelect" required>
+                    <option value="">-- Select Doctor --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Appointment Date</label>
+                <input type="date" id="appDate" required>
+            </div>
+
+            <div class="form-group">
+                <label>Appointment Time</label>
+                <input type="time" id="appTime" required>
+            </div>
+
+            <div class="form-group">
+                <label>Reason / Notes</label>
+                <textarea id="reason" rows="3" placeholder="Enter reason for appointment"></textarea>
+            </div>
+
+            <button type="submit">Save Appointment</button>
+        </form>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Load patients and doctors from localStorage
+        let patients = JSON.parse(localStorage.getItem('patients')) || [];
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        let doctors = [
+            { id: 1, name: "Dr. Ali Khan" },
+            { id: 2, name: "Dr. Sana Ahmed" },
+            { id: 3, name: "Dr. Bilal Raza" }
+        ];
+
+        // Populate patient dropdown
+        const patientSelect = document.getElementById("patientSelect");
+        patients.forEach(p => {
+            let opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = `${p.name} (${p.id})`;
+            patientSelect.appendChild(opt);
+        });
+
+        // Populate doctor dropdown
+        const doctorSelect = document.getElementById("doctorSelect");
+        doctors.forEach(d => {
+            let opt = document.createElement("option");
+            opt.value = d.id;
+            opt.textContent = d.name;
+            doctorSelect.appendChild(opt);
+        });
+
+        // Toaster
+        function showToast(msg) {
+            const x = document.getElementById("toast");
+            x.innerText = msg;
+            x.className = "toast show";
+            setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        // Form submit
+        document.getElementById("appointmentForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const appointment = {
+                id: 'AP-' + (appointments.length + 1).toString().padStart(3, '0'),
+                patientId: patientSelect.value,
+                patientName: patients.find(p => p.id === patientSelect.value)?.name || '',
+                doctorId: doctorSelect.value,
+                doctorName: doctors.find(d => d.id == doctorSelect.value)?.name || '',
+                date: document.getElementById("appDate").value,
+                time: document.getElementById("appTime").value,
+                reason: document.getElementById("reason").value
+            };
+
+            appointments.push(appointment);
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            showToast("Appointment booked successfully!");
+            this.reset();
+        });
+    </script>
+
+</body>
+
+</html>

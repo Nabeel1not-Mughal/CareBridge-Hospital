@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        form label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+
+        form input,
+        form select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cfd8d2;
+            border-radius: 6px;
+            font-size: 15px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 12px 20px;
+            background: #0e8a3a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Toaster */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 3s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Profile Settings</h2>
+
+        <form id="profileForm">
+            <label>Full Name</label>
+            <input type="text" id="fullName" required>
+
+            <label>Email</label>
+            <input type="email" id="email" required>
+
+            <label>Phone</label>
+            <input type="text" id="phone" placeholder="0300-1234567" maxlength="12">
+
+            <label>Gender</label>
+            <select id="gender">
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
+
+            <label>Date of Birth</label>
+            <input type="date" id="dob">
+
+            <label>Change Password</label>
+            <input type="password" id="password" placeholder="New Password">
+
+            <button type="submit">Update Profile</button>
+        </form>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Simulate current logged-in user (id = 1)
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+        let currentUser = users.find(u => u.id === 1) || { id: 1, name: 'John Doe', email: 'john@example.com', phone: '0300-1234567', gender: 'Male', dob: '1990-01-01', password: '123456' };
+
+        // Populate form with current data
+        document.getElementById("fullName").value = currentUser.name;
+        document.getElementById("email").value = currentUser.email;
+        document.getElementById("phone").value = currentUser.phone;
+        document.getElementById("gender").value = currentUser.gender;
+        document.getElementById("dob").value = currentUser.dob;
+
+        // Toaster
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
+        // Save profile changes
+        document.getElementById("profileForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            currentUser.name = document.getElementById("fullName").value;
+            currentUser.email = document.getElementById("email").value;
+            currentUser.phone = document.getElementById("phone").value;
+            currentUser.gender = document.getElementById("gender").value;
+            currentUser.dob = document.getElementById("dob").value;
+            const newPass = document.getElementById("password").value;
+            if (newPass) currentUser.password = newPass;
+
+            // Save to localStorage
+            let index = users.findIndex(u => u.id === currentUser.id);
+            if (index >= 0) { users[index] = currentUser; } else { users.push(currentUser); }
+            localStorage.setItem("users", JSON.stringify(users));
+
+            showToast("Profile updated successfully!");
+            document.getElementById("password").value = '';
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Medical Record - CareBridge HMS</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef5f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+    }
+
+    h2 {
+      color: #0e8a3a;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cfd8d2;
+      border-radius: 6px;
+      margin-top: 5px;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: #0e8a3a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: .9;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #0e8a3a;
+      color: #fff;
+    }
+
+    .totalBox {
+      background: #e8f7ec;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 18px;
+      border-radius: 6px;
+    }
+
+    .toast {
+      visibility: hidden;
+      min-width: 250px;
+      background: #0e8a3a;
+      color: #fff;
+      text-align: center;
+      padding: 16px;
+      border-radius: 6px;
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      z-index: 9999;
+    }
+
+    .toast.show {
+      visibility: visible;
+      animation: fadein .5s, fadeout .5s 3s;
+    }
+
+    @keyframes fadein {
+      from {
+        bottom: 0;
+        opacity: 0;
+      }
+
+      to {
+        bottom: 30px;
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeout {
+      from {
+        bottom: 30px;
+        opacity: 1;
+      }
+
+      to {
+        bottom: 0;
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2>Add Medical Record</h2>
+
+    <!-- Search Patient -->
+    <label>Enter Patient ID</label>
+    <div style="display:flex; gap:10px;">
+      <input type="text" id="patientIdInput" placeholder="PT-001">
+      <button type="button" onclick="searchPatient()">Search</button>
+    </div>
+
+    <div id="patientInfo" style="margin-top:15px; padding:12px; background:#f7fdf9; border-radius:6px;">
+      <strong>Name:</strong> <span id="pName">-</span><br>
+      <strong>Gender:</strong> <span id="pGender">-</span><br>
+      <strong>DOB:</strong> <span id="pDOB">-</span>
+    </div>
+
+    <hr style="margin:25px 0;">
+
+    <!-- Condition -->
+    <label>Condition / Diagnosis</label>
+    <textarea id="conditionInput" rows="2" placeholder="Enter medical condition"></textarea>
+
+    <!-- Treatment -->
+    <label>Treatment</label>
+    <textarea id="treatmentInput" rows="2" placeholder="Enter treatment"></textarea>
+
+    <!-- Prescriptions -->
+    <label>Prescriptions</label>
+    <textarea id="prescriptionsInput" rows="2" placeholder="Write prescription notes"></textarea>
+
+    <hr style="margin:25px 0;">
+
+    <!-- Medicine Section -->
+    <label>Select Medicine</label>
+    <select id="medicineSelect">
+      <option value="">-- Select Medicine --</option>
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" id="qtyInput" min="1" value="1">
+
+    <button onclick="addMedicine()">Add Medicine</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Medicine</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="medList"></tbody>
+    </table>
+
+    <div class="totalBox">
+      <strong>Grand Total: Rs <span id="grandTotal">0</span></strong>
+    </div>
+
+    <button onclick="saveRecord()">Save Medical Record</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let patients = JSON.parse(localStorage.getItem("patients")) || [];
+    let histories = JSON.parse(localStorage.getItem("medicalHistories")) || [];
+    let stock = JSON.parse(localStorage.getItem("medicineStock")) || [];
+    let notifications = JSON.parse(localStorage.getItem("pharmacyNotifications")) || [];
+
+    let selectedPatient = null;
+    let medCart = [];
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.innerText = msg;
+      t.className = "toast show";
+      setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+    }
+
+    const medSelect = document.getElementById("medicineSelect");
+    stock.forEach(m => {
+      let opt = document.createElement("option");
+      opt.value = m.id;
+      opt.innerText = `${m.name} (Rs ${m.price})`;
+      medSelect.appendChild(opt);
+    });
+
+    function searchPatient() {
+      let id = document.getElementById("patientIdInput").value.trim();
+      selectedPatient = patients.find(p => p.id === id);
+
+      if (!selectedPatient) {
+        showToast("Patient not found!");
+        document.getElementById("pName").innerText = "-";
+        document.getElementById("pGender").innerText = "-";
+        document.getElementById("pDOB").innerText = "-";
+        return;
+      }
+
+      document.getElementById("pName").innerText = selectedPatient.name;
+      document.getElementById("pGender").innerText = selectedPatient.gender;
+      document.getElementById("pDOB").innerText = selectedPatient.dob;
+
+      showToast("Patient Loaded!");
+    }
+
+    function addMedicine() {
+      let medId = medSelect.value;
+      let qty = parseInt(document.getElementById("qtyInput").value);
+
+      if (!medId) return showToast("Select medicine!");
+
+      let med = stock.find(m => m.id === medId);
+
+      let total = med.price * qty;
+      medCart.push({ name: med.name, price: med.price, qty, total, id: med.id });
+
+      updateTable();
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById("medList");
+      tbody.innerHTML = "";
+
+      let gTotal = 0;
+
+      medCart.forEach(m => {
+        gTotal += m.total;
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${m.name}</td>
+            <td>${m.price}</td>
+            <td>${m.qty}</td>
+            <td>${m.total}</td>
+          </tr>`;
+      });
+
+      document.getElementById("grandTotal").innerText = gTotal;
+    }
+
+    function saveRecord() {
+      if (!selectedPatient) return showToast("Search patient first!");
+      if (medCart.length === 0) return showToast("Add at least 1 medicine!");
+
+      let condition = document.getElementById("conditionInput").value.trim();
+      let treatment = document.getElementById("treatmentInput").value.trim();
+      let prescriptions = document.getElementById("prescriptionsInput").value.trim();
+
+      if (!condition || !treatment || !prescriptions)
+        return showToast("Fill condition, treatment & prescription!");
+
+      let entry = {
+        patientId: selectedPatient.id,
+        date: new Date().toLocaleDateString(),
+        condition,
+        treatment,
+        prescriptions,
+        medicines: medCart,
+        totalPayment: document.getElementById("grandTotal").innerText
+      };
+
+      histories.push(entry);
+      localStorage.setItem("medicalHistories", JSON.stringify(histories));
+
+      notifications.push({
+        patientId: selectedPatient.id,
+        medicines: medCart,
+        time: new Date().toLocaleString()
+      });
+
+      localStorage.setItem("pharmacyNotifications", JSON.stringify(notifications));
+
+      showToast("Medical record saved!");
+
+      medCart = [];
+      updateTable();
+    }
+  </script>
+
+</body>
+
+</html>

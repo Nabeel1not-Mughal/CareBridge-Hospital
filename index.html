@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareBridge HMS</title>
+<link rel="icon" href="images/careBridge.png">
+    <!-- Icons -->
+    <link rel="stylesheet"
+        href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f7fdf8;
+        }
+
+        /* Layout */
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #e7f7ec;
+            border-right: 1px solid #d9edde;
+            transition: 0.3s;
+            padding-top: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c7a4b;
+            font-size: 22px;
+            transition: 0.3s;
+        }
+
+        .menu-item {
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #2f5f3a;
+            transition: 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #d9f2e3;
+        }
+
+        .menu-item i {
+            font-size: 20px;
+            margin-right: 14px;
+            transition: 0.3s;
+        }
+
+        .collapsed .menu-text {
+            display: none;
+        }
+
+        .submenu {
+            display: none;
+            padding-left: 40px;
+        }
+
+        .submenu a {
+            display: block;
+            padding: 8px 0;
+            color: #3c6f4c;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .submenu a:hover {
+            color: #215533;
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .toggle-btn {
+            font-size: 26px;
+            color: #247a43;
+            cursor: pointer;
+        }
+
+        iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+        }
+
+        /* Responsive */
+        @media(max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .content {
+                margin-left: 0;
+            }
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 500;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <h2 class="menu-text">CareBridge</h2>
+
+            <div class="menu-item" onclick="toggleSubmenu('patientMenu')">
+                <i class="fi fi-rr-hospital-user"></i>
+                <span class="menu-text">Patient Management</span>
+            </div>
+            <div class="submenu" id="patientMenu">
+                <a href="add_patient.html" target="contentFrame">Add New Patient</a>
+                <a href="patient_list.html" target="contentFrame">Patient List</a>
+                <a href="add_medical.html" target="contentFrame">Assign Medicine</a>
+                <a href="medical_history.html" target="contentFrame">Medical History</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('doctorMenu')">
+                <i class="fi fi-rr-doctor"></i>
+                <span class="menu-text">Doctor Management</span>
+            </div>
+            <div class="submenu" id="doctorMenu">
+                <a href="add_doctor.html" target="contentFrame">Add Doctor</a>
+                <a href="doctor_list.html" target="contentFrame">Doctor List</a>
+                <a href="doctor_schedule.html" target="contentFrame">Doctor Schedule</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('appointmentMenu')">
+                <i class="fi fi-rr-calendar"></i>
+                <span class="menu-text">Appointments</span>
+            </div>
+            <div class="submenu" id="appointmentMenu">
+                <a href="appointment_booking.html" target="contentFrame">Create Appointment</a>
+                <a href="appointment_list.html" target="contentFrame">Appointment List</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('wardMenu')">
+                <i class="fi fi-rr-bed"></i>
+                <span class="menu-text">Ward / Bed</span>
+            </div>
+            <div class="submenu" id="wardMenu">
+                <a href="available_beds.html" target="contentFrame">Available Beds</a>
+                <a href="occupied_beds.html" target="contentFrame">Occupied Beds</a>
+                <a href="rooms_list.html" target="contentFrame">Rooms List</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('pharmacyMenu')">
+                <i class="fi fi-rr-medicine"></i>
+                <span class="menu-text">Pharmacy</span>
+            </div>
+            <div class="submenu" id="pharmacyMenu">
+                <a href="pharmacy_stock.html" target="contentFrame">Manage Medicine</a>
+                <a href="low_stock.html" target="contentFrame">Low Stock Alerts</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('labMenu')">
+                <i class="fi fi-rr-flask"></i>
+                <span class="menu-text">Laboratory</span>
+            </div>
+            <div class="submenu" id="labMenu">
+                <a href="add_test.html" target="contentFrame">Add Test</a>
+                <a href="test_reports.html" target="contentFrame">Test Reports</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('billingMenu')">
+                <i class="fi fi-rr-receipt"></i>
+                <span class="menu-text">Billing</span>
+            </div>
+            <div class="submenu" id="billingMenu">
+                <a href="create_bill.html" target="contentFrame">Create Bill</a>
+                <a href="invoice_list.html" target="contentFrame">Invoice List</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('staffMenu')">
+                <i class="fi fi-rr-users"></i>
+                <span class="menu-text">Staff Management</span>
+            </div>
+            <div class="submenu" id="staffMenu">
+                <a href="add_staff.html" target="contentFrame">Add Staff</a>
+                <a href="staff_list.html" target="contentFrame">Staff List</a>
+            </div>
+
+            <div class="menu-item" onclick="toggleSubmenu('settingsMenu')">
+                <i class="fi fi-rr-settings"></i>
+                <span class="menu-text">Settings</span>
+            </div>
+            <div class="submenu" id="settingsMenu">
+                <a href="profile_settings.html" target="contentFrame">Profile Settings</a>
+                <a href="system_settings.html" target="contentFrame">System Settings</a>
+            </div>
+
+            <div class="menu-item" onclick="logout()">
+                <i class="fi fi-rr-exit"></i>
+                <span class="menu-text">Logout</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="topbar">
+                <i class="fi fi-rr-menu-burger toggle-btn" onclick="toggleSidebar()"></i>
+                <h3 style="color:#247a43">CareBridge Hospital Management System</h3>
+            </div>
+            <iframe name="contentFrame" src="welcome.html"></iframe>
+        </div>
+
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    </div>
+
+    <script>
+        function toggleSubmenu(id) {
+            let submenu = document.getElementById(id);
+            submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const overlay = document.getElementById("overlay");
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle("active");
+                overlay.classList.toggle("active");
+            } else {
+                sidebar.classList.toggle("collapsed");
+            }
+        }
+
+        function logout() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "login.html";
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooms List - CareBridge HMS</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Montserrat', sans-serif; background: #f2f8f4; margin:0; padding:0;}
+.container { max-width: 1100px; margin: 30px auto; background: #fff; padding:30px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+h2 { color:#0e8a3a; margin-bottom:20px; }
+table { width:100%; border-collapse:collapse; margin-top:20px; }
+th, td { padding:12px; text-align:left; border-bottom:1px solid #ddd; }
+th { background:#0e8a3a; color:#fff; }
+tr:hover { background:#f1f1f1; }
+.status-available { color: #2ecc71; font-weight:600; }
+.status-occupied { color: #e74c3c; font-weight:600; }
+.toast { visibility: hidden; min-width: 250px; background:#0e8a3a; color:#fff; text-align:center; padding:16px; border-radius:6px; position:fixed; left:50%; bottom:30px; transform:translateX(-50%); z-index:9999;}
+.toast.show { visibility: visible; animation: fadein .5s, fadeout .5s 3s; }
+@keyframes fadein { from {bottom:0; opacity:0;} to {bottom:30px; opacity:1;} }
+@keyframes fadeout { from {bottom:30px; opacity:1;} to {bottom:0; opacity:0;} }
+@media(max-width:600px){ table, th, td { font-size:12px; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Rooms & Beds List</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Room No.</th>
+                <th>Ward</th>
+                <th>Total Beds</th>
+                <th>Occupied Beds</th>
+                <th>Available Beds</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="roomsTable">
+            <tr><td colspan="6" style="text-align:center;">Loading rooms...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let patients = JSON.parse(localStorage.getItem("patients")) || [];
+
+// Example room data if empty
+let rooms = [
+    {room:'101', ward:'General', totalBeds:3},
+    {room:'102', ward:'ICU', totalBeds:2},
+    {room:'103', ward:'Emergency', totalBeds:4},
+    {room:'104', ward:'General', totalBeds:3},
+];
+
+// Calculate occupied beds
+function getOccupiedBeds(roomNo){
+    return patients.filter(p => p.room === roomNo).length;
+}
+
+function showToast(msg){
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.className = "toast show";
+    setTimeout(()=>t.className=t.className.replace("show",""),3000);
+}
+
+function renderRooms(){
+    const tbody = document.getElementById("roomsTable");
+    tbody.innerHTML = '';
+    rooms.forEach(r=>{
+        let occupied = getOccupiedBeds(r.room);
+        let available = r.totalBeds - occupied;
+        let status = available > 0 ? 'Available' : 'Full';
+        let statusClass = available > 0 ? 'status-available' : 'status-occupied';
+        tbody.innerHTML += `
+            <tr>
+                <td>${r.room}</td>
+                <td>${r.ward}</td>
+                <td>${r.totalBeds}</td>
+                <td>${occupied}</td>
+                <td>${available}</td>
+                <td class="${statusClass}">${status}</td>
+            </tr>
+        `;
+        if(available <= 1){
+            showToast(`Warning: Only ${available} bed(s) left in Room ${r.room}`);
+        }
+    });
+}
+
+renderRooms();
+</script>
+
+</body>
+</html>

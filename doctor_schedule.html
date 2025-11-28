@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Schedule - CareBridge HMS</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: #eef3f0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 35px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0b6e33;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #c7d3cc;
+            background: #f9fdfb;
+            font-size: 15px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .col {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        button {
+            background: #0b6e33;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #095529;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 25px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: #e6f5ec;
+            color: #0b6e33;
+            font-weight: 700;
+        }
+
+        tr:nth-child(even) {
+            background: #f6fbf9;
+        }
+
+        tr:hover {
+            background: #eaf8f1;
+        }
+
+        .delete-btn {
+            background: #c40000;
+            color: #fff;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: #a30000;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 200px;
+            background: #0c7b38;
+            color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            position: fixed;
+            left: 50%;
+            bottom: 35px;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 16px;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein .5s, fadeout .5s 2.8s;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+                bottom: 0;
+            }
+
+            to {
+                opacity: 1;
+                bottom: 35px;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                opacity: 1;
+                bottom: 35px;
+            }
+
+            to {
+                opacity: 0;
+                bottom: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>Doctor Schedule Management</h2>
+
+        <div class="row">
+            <div class="col">
+                <label>Select Doctor</label>
+                <select id="doctorSelect">
+                    <option value="">-- Select Doctor --</option>
+                </select>
+            </div>
+        </div>
+
+        <h3 style="color:#0b6e33; margin-top:25px;">Add Schedule</h3>
+
+        <div class="row">
+            <div class="col">
+                <label>Day</label>
+                <select id="day">
+                    <option>Monday</option>
+                    <option>Tuesday</option>
+                    <option>Wednesday</option>
+                    <option>Thursday</option>
+                    <option>Friday</option>
+                    <option>Saturday</option>
+                    <option>Sunday</option>
+                </select>
+            </div>
+
+            <div class="col">
+                <label>Start Time</label>
+                <input type="time" id="startTime">
+            </div>
+
+            <div class="col">
+                <label>End Time</label>
+                <input type="time" id="endTime">
+            </div>
+
+            <div class="col">
+                <label>Room No.</label>
+                <input type="text" id="room" placeholder="e.g. R-12">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>Notes (optional)</label>
+                <textarea id="notes" rows="3" placeholder="Special instructions..."></textarea>
+            </div>
+        </div>
+
+        <button id="saveBtn">Save Schedule</button>
+
+
+        <h3 style="color:#0b6e33; margin-top:35px;">Doctor's Schedule</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Room</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleBody">
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:20px;">Select doctor to view schedule</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+        let schedules = JSON.parse(localStorage.getItem("doctorSchedules")) || [];
+
+        const doctorSelect = document.getElementById("doctorSelect");
+        const scheduleBody = document.getElementById("scheduleBody");
+
+        doctors.forEach(d => {
+            let op = document.createElement("option");
+            op.value = d.id;
+            op.textContent = `${d.name} (${d.specialization})`;
+            doctorSelect.appendChild(op);
+        });
+
+        function showToast(msg) {
+            let t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        function loadSchedule(docID) {
+            scheduleBody.innerHTML = "";
+
+            let list = schedules.filter(s => s.doctorId === docID);
+
+            if (list.length === 0) {
+                scheduleBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No schedule found</td></tr>`;
+                return;
+            }
+
+            list.forEach((s, index) => {
+                let row = `
+                <tr>
+                    <td>${s.day}</td>
+                    <td>${s.startTime} - ${s.endTime}</td>
+                    <td>${s.room}</td>
+                    <td>${s.notes || "-"}</td>
+                    <td><button class="delete-btn" onclick="deleteSchedule('${docID}', ${index})">Delete</button></td>
+                </tr>
+                `;
+                scheduleBody.innerHTML += row;
+            });
+        }
+
+        doctorSelect.addEventListener("change", () => {
+            loadSchedule(doctorSelect.value);
+        });
+
+        document.getElementById("saveBtn").addEventListener("click", () => {
+            const docID = doctorSelect.value;
+
+            if (!docID) return showToast("Select doctor first!");
+
+            const sch = {
+                doctorId: docID,
+                day: document.getElementById("day").value,
+                startTime: document.getElementById("startTime").value,
+                endTime: document.getElementById("endTime").value,
+                room: document.getElementById("room").value,
+                notes: document.getElementById("notes").value
+            };
+
+            schedules.push(sch);
+            localStorage.setItem("doctorSchedules", JSON.stringify(schedules));
+
+            showToast("Schedule Saved!");
+
+            loadSchedule(docID);
+        });
+
+        function deleteSchedule(docID, index) {
+            if (confirm("Delete this schedule?")) {
+                let list = schedules.filter(s => s.doctorId === docID);
+                list.splice(index, 1);
+
+                schedules = schedules.filter(s => s.doctorId !== docID).concat(list);
+
+                localStorage.setItem("doctorSchedules", JSON.stringify(schedules));
+                loadSchedule(docID);
+                showToast("Schedule removed!");
+            }
+        }
+    </script>
+
+</body>
+
+</html>

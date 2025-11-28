@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff List - CareBridge HMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef5f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #0e8a3a;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #cfd8d2;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0e8a3a;
+            color: #fff;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .edit {
+            background: #3498db;
+        }
+
+        .delete {
+            background: #e74c3c;
+        }
+
+        /* Toaster */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: #0e8a3a;
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein .5s, fadeout .5s 3s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Staff List</h2>
+
+        <input type="text" id="searchInput" placeholder="Search by Name or Role...">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>DOB</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="staffTable">
+                <!-- Staff rows go here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let staffList = JSON.parse(localStorage.getItem("staffList")) || [];
+        let editIndex = null;
+
+        // Toaster
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
+        // Render Staff Table
+        function renderTable() {
+            const tbody = document.getElementById("staffTable");
+            tbody.innerHTML = "";
+            if (staffList.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No staff found</td></tr>";
+                return;
+            }
+            staffList.forEach((s, i) => {
+                tbody.innerHTML += `
+        <tr>
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td>${s.gender}</td>
+            <td>${s.role}</td>
+            <td>${s.email}</td>
+            <td>${s.phone}</td>
+            <td>${s.dob}</td>
+            <td>
+                <button class="edit" onclick="editStaff(${i})">Edit</button>
+                <button class="delete" onclick="deleteStaff(${i})">Delete</button>
+            </td>
+        </tr>`;
+            });
+        }
+        renderTable();
+
+        // Edit Staff
+        function editStaff(i) {
+            const s = staffList[i];
+            const name = prompt("Edit Name:", s.name);
+            if (name) s.name = name;
+
+            const role = prompt("Edit Role:", s.role);
+            if (role) s.role = role;
+
+            const email = prompt("Edit Email:", s.email);
+            if (email) s.email = email;
+
+            const phone = prompt("Edit Phone:", s.phone);
+            if (phone) s.phone = phone;
+
+            staffList[i] = s;
+            localStorage.setItem("staffList", JSON.stringify(staffList));
+            renderTable();
+            showToast("Staff updated successfully!");
+        }
+
+        // Delete Staff
+        function deleteStaff(i) {
+            if (confirm("Delete this staff member?")) {
+                staffList.splice(i, 1);
+                localStorage.setItem("staffList", JSON.stringify(staffList));
+                renderTable();
+                showToast("Staff deleted!");
+            }
+        }
+
+        // Search Staff
+        document.getElementById("searchInput").addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            const filtered = staffList.filter(s => s.name.toLowerCase().includes(query) || s.role.toLowerCase().includes(query));
+            const tbody = document.getElementById("staffTable");
+            tbody.innerHTML = "";
+            if (filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>No staff found</td></tr>";
+                return;
+            }
+            filtered.forEach((s, i) => {
+                tbody.innerHTML += `
+        <tr>
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td>${s.gender}</td>
+            <td>${s.role}</td>
+            <td>${s.email}</td>
+            <td>${s.phone}</td>
+            <td>${s.dob}</td>
+            <td>
+                <button class="edit" onclick="editStaff(${i})">Edit</button>
+                <button class="delete" onclick="deleteStaff(${i})">Delete</button>
+            </td>
+        </tr>`;
+            });
+        });
+    </script>
+
+</body>
+
+</html>

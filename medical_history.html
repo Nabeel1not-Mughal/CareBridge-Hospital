@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical History - CareBridge HMS</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f8f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #0e8a3a;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+        }
+
+        input {
+            width: calc(100% - 120px);
+            padding: 12px;
+            border: 1px solid #ccd7cf;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px;
+            background: #0e8a3a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #0c742f;
+        }
+
+        #patientInfo {
+            background: #f7fdf9;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #0e8a3a;
+            color: white;
+        }
+
+        .del-btn {
+            background: #c0392b;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .del-btn:hover {
+            background: #a02d22;
+        }
+
+        /* TOAST */
+        .toast {
+            visibility: hidden;
+            min-width: 200px;
+            background: #0e8a3a;
+            color: white;
+            padding: 14px;
+            border-radius: 6px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein .5s, fadeout .5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+                bottom: 10px;
+            }
+
+            to {
+                opacity: 1;
+                bottom: 30px;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                opacity: 1;
+                bottom: 30px;
+            }
+
+            to {
+                opacity: 0;
+                bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Medical History</h2>
+
+        <label>Enter Patient ID</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="patientIdInput" placeholder="PT-000">
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <div id="patientInfo">
+            <strong>Name:</strong> <span id="pName">-</span><br>
+            <strong>Gender:</strong> <span id="pGender">-</span><br>
+            <strong>DOB:</strong> <span id="pDOB">-</span>
+        </div>
+
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Condition</th>
+                    <th>Treatment</th>
+                    <th>Prescriptions</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" style="text-align:center;">Search patient to view history</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let patients = JSON.parse(localStorage.getItem("patients")) || [];
+        let histories = JSON.parse(localStorage.getItem("medicalHistories")) || [];
+
+        const pName = document.getElementById("pName");
+        const pGender = document.getElementById("pGender");
+        const pDOB = document.getElementById("pDOB");
+        const tbody = document.querySelector("#historyTable tbody");
+
+        function showToast(msg) {
+            let t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
+        function renderHistory(id) {
+            tbody.innerHTML = "";
+
+            let recordList = histories.filter(h => h.patientId === id);
+
+            if (recordList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No medical history found</td></tr>`;
+                return;
+            }
+
+            recordList.forEach((h, index) => {
+                let row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${h.date}</td>
+                    <td>${h.condition || "-"}</td>
+                    <td>${h.treatment || "-"}</td>
+                    <td>${h.prescriptions || "-"}</td>
+                    <td>
+                        <button class="del-btn" onclick="deleteRecord('${h.patientId}', ${index})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function deleteRecord(id, index) {
+            if (!confirm("Delete this record?")) return;
+
+            let list = histories.filter(h => h.patientId === id);
+            let removeItem = list[index];
+
+            histories = histories.filter(h => h !== removeItem);
+
+            localStorage.setItem("medicalHistories", JSON.stringify(histories));
+
+            showToast("Record deleted!");
+
+            renderHistory(id);
+        }
+
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            let id = document.getElementById("patientIdInput").value.trim();
+
+            let p = patients.find(x => x.id === id);
+
+            if (!p) {
+                pName.textContent = "-";
+                pGender.textContent = "-";
+                pDOB.textContent = "-";
+
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Patient not found</td></tr>`;
+                showToast("Patient not found!");
+                return;
+            }
+
+            pName.textContent = p.name;
+            pGender.textContent = p.gender;
+            pDOB.textContent = p.dob;
+
+            renderHistory(id);
+        });
+
+    </script>
+
+</body>
+
+</html>

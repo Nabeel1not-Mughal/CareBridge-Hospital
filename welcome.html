@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - CareBridge HMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f2f8f4;
+        }
+
+        h2 {
+            color: #0e8a3a;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #247a43;
+        }
+
+        .card p {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card i {
+            font-size: 32px;
+            float: right;
+            color: #0e8a3a;
+        }
+
+        @media(max-width:600px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Welcome to CareBridge Hospital</h2>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Patients <i class="fi fi-rr-hospital-user"></i></h3>
+            <p id="totalPatients">0</p>
+            <small>Total registered patients</small>
+        </div>
+
+        <div class="card">
+            <h3>Doctors <i class="fi fi-rr-doctor"></i></h3>
+            <p id="totalDoctors">0</p>
+            <small>Active doctors</small>
+        </div>
+
+        <div class="card">
+            <h3>Appointments <i class="fi fi-rr-calendar"></i></h3>
+            <p id="totalAppointments">0</p>
+            <small>Upcoming appointments</small>
+        </div>
+
+        <div class="card">
+            <h3>Available Beds <i class="fi fi-rr-bed"></i></h3>
+            <p id="availableBeds">0</p>
+            <small>Vacant beds in wards</small>
+        </div>
+
+        <div class="card">
+            <h3>Medicines <i class="fi fi-rr-medicine"></i></h3>
+            <p id="totalMedicines">0</p>
+            <small>Medicines in stock</small>
+        </div>
+
+        <div class="card">
+            <h3>Tests <i class="fi fi-rr-flask"></i></h3>
+            <p id="totalTests">0</p>
+            <small>Available lab tests</small>
+        </div>
+    </div>
+
+    <script>
+        // Load data from localStorage
+        const patients = JSON.parse(localStorage.getItem('patients')) || [];
+        const doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+        const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        const stock = JSON.parse(localStorage.getItem('medicineStock')) || [];
+        const tests = JSON.parse(localStorage.getItem('labTests')) || [];
+        const rooms = JSON.parse(localStorage.getItem('rooms')) || [];
+
+        // Calculate available beds
+        let availableBeds = 0;
+        rooms.forEach(r => {
+            let occupied = patients.filter(p => p.room === r.room).length;
+            availableBeds += (r.totalBeds - occupied);
+        });
+
+        // Update cards
+        document.getElementById('totalPatients').innerText = patients.length;
+        document.getElementById('totalDoctors').innerText = doctors.length;
+        document.getElementById('totalAppointments').innerText = appointments.length;
+        document.getElementById('availableBeds').innerText = availableBeds;
+        document.getElementById('totalMedicines').innerText = stock.length;
+        document.getElementById('totalTests').innerText = tests.length;
+    </script>
+
+    <!-- Icons CDN -->
+    <link rel="stylesheet"
+        href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+</body>
+
+</html>
